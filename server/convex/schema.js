@@ -18,6 +18,21 @@ export default defineSchema({
     createdAt: v.number(),
   }).index("by_username", ["username"]),
 
+  // Private password credentials
+  playerCredentials: defineTable({
+    playerId: v.id("players"),
+    passwordHash: v.string(),
+  }).index("by_player", ["playerId"]),
+
+  // Login sessions
+  playerSessions: defineTable({
+    playerId: v.id("players"),
+    tokenHash: v.string(),
+    expiresAt: v.number(),
+  })
+    .index("by_token_hash", ["tokenHash"])
+    .index("by_player", ["playerId"]),
+
   // Achievements unlocked by players
   achievements: defineTable({
     playerId: v.id("players"),
