@@ -3,6 +3,7 @@ import express from "express";
 import cors from "cors";
 import gamesRouter from "./routes/games.js";
 import { GameError } from "./logic/game.js";
+import authRouter from "./routes/auth.js";
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json({ limit: "10kb" }));
 
 app.get("/health", (req, res) => res.json({ status: "ok" }));
 app.use("/games", gamesRouter);
+app.use("/auth", authRouter);
 
 app.use((req, res) => res.status(404).json({ error: "Not found." }));
 
