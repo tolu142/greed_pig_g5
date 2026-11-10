@@ -6,6 +6,7 @@ import {
   rollDie,
   applyRoll,
   applyPass,
+  applySteal,
 } from "../logic/game.js";
 import { createGameRecord, loadGame, saveGame } from "../db.js";
 
@@ -61,6 +62,18 @@ router.post(
   handle(async (req, res) => {
     const state = await getOr404(req.params.id);
     const next = applyPass(state);
+    await saveGame(req.params.id, next);
+    res.json({ game: toPublic(req.params.id, next) });
+  })
+);
+
+// Steal: the current player takes all the banked points of another player.
+// Only allowed after a streak of good rolls (the server checks this, not the browser).
+router.post(
+  "/:id/steal",
+  handle(async (req, res) => {
+    const state = await getOr404(req.params.id);
+    const next = applySteal(state, req.body?.targetIndex);
     await saveGame(req.params.id, next);
     res.json({ game: toPublic(req.params.id, next) });
   })

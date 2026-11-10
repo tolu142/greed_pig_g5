@@ -30,8 +30,12 @@ Only whoever edits files in `server/convex/` needs to run `npx convex dev`. Ever
 | GET | /games/:id | Get a game's current state |
 | POST | /games/:id/roll | Server rolls the die, applies the rules, saves. Returns `{ roll, game }` |
 | POST | /games/:id/pass | Bank the running points and end the turn. Returns `{ game }` |
+| POST | /games/:id/steal | After a streak of good rolls, take all of another player's banked points. Body: `{ targetIndex }`. Returns `{ game }` |
 
 ## Where to add features
 - New rules or power-ups: `logic/game.js` (keep functions pure, add fields to the game state, add tests)
 - New endpoints: a new file in `routes/`, registered in `index.js`
 - New tables: add to `convex/schema.js`, add functions in `convex/`, and call them from `db.js`
+
+## Testing the steal power-up quickly
+Set `STEAL_STREAK=2` in `server/.env` and restart the server so a steal unlocks after 2 good rolls instead of 8. Remove the line again before the demo or deployment.
