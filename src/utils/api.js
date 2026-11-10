@@ -32,6 +32,8 @@ export const createGame = (playerData, maxPoints) =>
 export const getGame = (id) => request(`/games/${id}`);
 export const rollDice = (id) => request(`/games/${id}/roll`, { method: "POST" });
 export const passTurn = (id) => request(`/games/${id}/pass`, { method: "POST" });
+export const stealPoints = (id, targetIndex) =>
+  request(`/games/${id}/steal`, { method: "POST", body: JSON.stringify({ targetIndex }) });
 
 // Free hosting puts the server to sleep when idle. Pinging it early wakes it up
 // while the player is still on the setup screen.
