@@ -9,6 +9,7 @@ import SoundSwitch from "src/components/SoundSwitch";
 import { useGreedyPigContext } from "src/context/useGreedyPigContext";
 import ErrorBanner from "src/components/ErrorBanner";
 import { createGame, getGame } from "src/utils/api";
+import { INITIAL_STEAL } from "src/utils/steal";
 
 function LiveGameSetup() {
   const {
@@ -23,6 +24,7 @@ function LiveGameSetup() {
     gameId,
     setGameId,
     setApiError,
+    setSteal,
   } = useLiveGameContext();
   const navigate = useNavigate();
   const { preloadSrcList, pigPetNames } = useGreedyPigContext();
@@ -46,6 +48,7 @@ function LiveGameSetup() {
       if (!canResume) {
         const game = await createGame(playerData, maxPoints);
         setGameId(game.id);
+        setSteal({ ...INITIAL_STEAL, at: game.stealAt ?? INITIAL_STEAL.at });
 
         let newPlayerData = playerData.map((player) => {
           let newPlayer = {
