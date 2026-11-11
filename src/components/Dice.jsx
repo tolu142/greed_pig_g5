@@ -57,11 +57,14 @@ export function Dice({
 
   return (
     <>
-      <button
-        className={`hover:scale-105 active:scale-100 duration-300 md:w-auto w-[200px]`}
-        onClick={handleDiceClick}
-        disabled={isRolling}
-      >
+<button
+  type="button"
+  className={`hover:scale-105 active:scale-100 duration-300 md:w-auto w-[200px]`}
+  onClick={handleDiceClick}
+  disabled={isRolling}
+  aria-label={isRolling ? "Rolling the dice" : "Roll the dice"}
+  aria-busy={isRolling}
+>
         {die.map((dice, index) => (
           <img
             key={index}
