@@ -97,26 +97,59 @@ router.get(
 );
 
 // Roll the dice. The server rolls, applies the rules and saves the result.
+
 router.post(
   "/:id/roll",
   handle(async (req, res) => {
     const state = await getOr404(req.params.id);
     const roll = rollDie();
     const next = applyRoll(state, roll);
-    await saveGame(req.params.id, next);
+
+
+    if (process.env.CONVEX_URL) {
+      // Validate and save every roll atomically in Convex.
+      await callInternalConvex("/internal/save-move", {
+        gameId: req.params.id,
+        previousState: state,
+        nextState: next,
+        action: "roll",
+        roll,
+      });
+    } else {
+      // Preserve the original in-memory fallback.
+      await saveGame(req.params.id, next);
+    }
+
+
     res.json({ roll, game: toPublic(req.params.id, next) });
   })
 );
 
+
 // Pass: bank the points and end the turn
+
 router.post(
   "/:id/pass",
   handle(async (req, res) => {
     const state = await getOr404(req.params.id);
     const next = applyPass(state);
-    await saveGame(req.params.id, next);
+
+    if (process.env.CONVEX_URL) {
+      // Validate and save the pass atomically in Convex.
+      await callInternalConvex("/internal/save-move", {
+        gameId: req.params.id,
+        previousState: state,
+        nextState: next,
+        action: "pass",
+      });
+    } else {
+      // Preserve the original in-memory fallback.
+      await saveGame(req.params.id, next);
+    }
+
     res.json({ game: toPublic(req.params.id, next) });
   })
 );
+
 
 export default router;

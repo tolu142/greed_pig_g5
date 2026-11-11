@@ -347,4 +347,66 @@ http.route({
 });
 
 
+http.route({
+  path: "/internal/save-move",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyInternalRequest(request)) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    let body;
+
+    try {
+      body = await request.json();
+    } catch {
+      return new Response("Invalid JSON", { status: 400 });
+    }
+
+    if (
+      typeof body?.gameId !== "string" ||
+      !body.previousState ||
+      typeof body.previousState !== "object" ||
+      Array.isArray(body.previousState) ||
+      !body.nextState ||
+      typeof body.nextState !== "object" ||
+      Array.isArray(body.nextState) ||
+      !["roll", "pass"].includes(body.action) ||
+      (body.action === "roll" &&
+        (!Number.isInteger(body.roll) ||
+          body.roll < 1 ||
+          body.roll > 6))
+    ) {
+      return new Response("Invalid request", { status: 400 });
+    }
+
+    try {
+      const result = await ctx.runMutation(
+        internal.progression.saveMoveAndAward,
+        {
+          gameId: body.gameId,
+          previousState: body.previousState,
+          nextState: body.nextState,
+          action: body.action,
+          ...(body.action === "roll" ? { roll: body.roll } : {}),
+        }
+      );
+
+      return Response.json(result);
+    } catch (error) {
+      console.error("Game move failed:", error);
+
+      if (
+        error.message?.includes("Game state changed") ||
+        error.message?.includes("already finished")
+      ) {
+        return new Response("Game state conflict", { status: 409 });
+      }
+
+      return new Response("Game move failed", { status: 400 });
+    }
+  }),
+});
+
+
 export default http;

@@ -6,13 +6,18 @@ const COMPLETION_XP = 50;
 const WIN_BONUS_XP = 100;
 const XP_PER_LEVEL = 200;
 
-export const awardGame = internalMutation({
-  args: {
-    gameId: v.id("games"),
-  },
 
-  handler: async (ctx, { gameId }) => {
-    const game = await ctx.db.get(gameId);
+function assertUnchangedGameState(previous, current) {
+  if (JSON.stringify(previous) !== JSON.stringify(current)) {
+    throw new Error(
+      "Game state changed. Please retry your move."
+    );
+  }
+}
+
+
+async function awardGameRewards(ctx, gameId) {
+  const game = await ctx.db.get(gameId);
 
     if (!game || !game.state.isGameOver) {
       throw new Error("Game has not finished.");
@@ -114,8 +119,112 @@ export const awardGame = internalMutation({
       losses,
       newAchievements,
     };
+}
+
+export const awardGame = internalMutation({
+  args: {
+    gameId: v.id("games"),
+  },
+
+  handler: async (ctx, { gameId }) => {
+    return await awardGameRewards(ctx, gameId);
   },
 });
+
+
+function validateMove(previous, next, action, roll) {
+  if (!previous || previous.isGameOver) {
+    throw new Error("Game has already finished.");
+  }
+
+  const expected = structuredClone(previous);
+  const playerIndex = expected.currentPlayer;
+  const player = expected.players[playerIndex];
+
+  if (!player) {
+    throw new Error("Invalid current player.");
+  }
+
+  if (action === "roll") {
+    if (!Number.isInteger(roll) || roll < 1 || roll > 6) {
+      throw new Error("Invalid dice roll.");
+    }
+
+    expected.lastRoll = roll;
+
+    if (roll === 1) {
+      player.running_points = 0;
+      expected.currentPlayer =
+        (playerIndex + 1) % expected.players.length;
+    } else {
+      player.running_points += roll;
+
+      if (
+        player.running_points + player.total_points >=
+        expected.maxPoints
+      ) {
+        expected.isGameOver = true;
+        expected.winner = playerIndex;
+      }
+    }
+  } else if (action === "pass") {
+    player.total_points += player.running_points;
+    player.running_points = 0;
+    expected.currentPlayer =
+      (playerIndex + 1) % expected.players.length;
+  } else {
+    throw new Error("Invalid game action.");
+  }
+
+  if (JSON.stringify(expected) !== JSON.stringify(next)) {
+    throw new Error("Move does not match the game rules.");
+  }
+}
+
+
+
+export const saveMoveAndAward = internalMutation({
+  args: {
+    gameId: v.id("games"),
+    previousState: v.any(),
+    nextState: v.any(),
+    action: v.union(v.literal("roll"), v.literal("pass")),
+    roll: v.optional(v.number()),
+  },
+
+  handler: async (
+    ctx,
+    { gameId, previousState, nextState, action, roll }
+  ) => {
+    const game = await ctx.db.get(gameId);
+
+    if (!game) {
+      throw new Error("Game not found.");
+    }
+
+    if (game.state.isGameOver) {
+      throw new Error("Game has already finished.");
+    }
+
+    // Reject moves based on an outdated game state.
+    assertUnchangedGameState(previousState, game.state);
+
+    // Verify the move follows the original game rules.
+    validateMove(game.state, nextState, action, roll);
+
+    // Save the move within the same transaction.
+    await ctx.db.patch(gameId, { state: nextState });
+
+    // Award XP atomically if this move finishes the game.
+    if (nextState.isGameOver) {
+      const reward = await awardGameRewards(ctx, gameId);
+      return { reward };
+    }
+
+    return { reward: null };
+  },
+});
+
 
 export const getProfile = internalQuery({
   args: {

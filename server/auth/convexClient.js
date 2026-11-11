@@ -1,3 +1,4 @@
+import { GameError } from "../logic/game.js";
 
 export async function callInternalConvex(path, payload) {
   const convexUrl = process.env.CONVEX_URL;
@@ -28,9 +29,22 @@ export async function callInternalConvex(path, payload) {
     signal: AbortSignal.timeout(10000),
   });
 
+
+
   if (!response.ok) {
-    throw new Error(`Convex request failed (${response.status}).`);
+    if (response.status === 409) {
+      throw new GameError(
+        "Game state changed. Please retry your move.",
+        409
+      );
+    }
+
+    throw new Error(
+      `Convex request failed (${response.status}).`
+    );
   }
+
+
 
   return await response.json();
 }
