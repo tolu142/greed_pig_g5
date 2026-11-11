@@ -39,4 +39,26 @@ export default defineSchema({
     achievementKey: v.string(),
     unlockedAt: v.number(),
   }).index("by_player", ["playerId"]),
+
+  // Tracks rewarded games to prevent duplicate XP
+  gameRewards: defineTable({
+    gameId: v.id("games"),
+    playerId: v.id("players"),
+    xpAwarded: v.number(),
+    won: v.boolean(),
+    awardedAt: v.number(),
+  })
+    .index("by_game", ["gameId"])
+    .index("by_player", ["playerId"]),
+
+  // Links an authenticated account to Player 1 in a game
+  gameParticipants: defineTable({
+    gameId: v.id("games"),
+    playerId: v.id("players"),
+    playerIndex: v.number(),
+    linkedAt: v.number(),
+  })
+    .index("by_game", ["gameId"])
+    .index("by_player", ["playerId"]),
+
 });

@@ -1,5 +1,5 @@
 
-import argon2 from "argon2";
+import bcrypt from "bcryptjs";
 
 export function validateUsername(username) {
   if (typeof username !== "string") {
@@ -22,8 +22,8 @@ export function validatePassword(password) {
     throw new Error("Password must be a string.");
   }
 
-  if (password.length < 12 || password.length > 128) {
-    throw new Error("Password must be between 12 and 128 characters.");
+  if (password.length < 8 || password.length > 72) {
+    throw new Error("Password must be between 8 and 72 characters.");
   }
 
   return password;
@@ -31,17 +31,14 @@ export function validatePassword(password) {
 
 export async function hashPassword(password) {
   validatePassword(password);
-
-  return await argon2.hash(password, {
-    type: argon2.argon2id,
-  });
+  return await bcrypt.hash(password, 12);
 }
 
 export async function verifyPassword(hash, password) {
   if (typeof password !== "string") return false;
 
   try {
-    return await argon2.verify(hash, password);
+    return await bcrypt.compare(password, hash);
   } catch {
     return false;
   }
