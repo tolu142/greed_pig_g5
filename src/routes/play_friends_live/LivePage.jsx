@@ -19,7 +19,7 @@ function LiveGamePage() {
   const [currentPlayer, setCurrentPlayer] = useState(0);
   const [gameId, setGameId] = useState(null); // id of the game saved on the server
   const [apiError, setApiError] = useState(""); // message shown when the server call fails
-
+  const [liveAnnouncement, setLiveAnnouncement] = useState("");
   useEffect(() => {
     wakeServer();
   }, []);
@@ -61,6 +61,8 @@ function LiveGamePage() {
             setGameId,
             apiError,
             setApiError,
+            liveAnnouncement,
+            setLiveAnnouncement,
           }}
         >
           <Outlet />

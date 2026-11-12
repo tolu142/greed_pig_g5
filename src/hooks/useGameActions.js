@@ -12,6 +12,7 @@ export default function useGameActions() {
   const {
     playerData,
     setPlayerData,
+    setLiveAnnouncement,
     maxPoints,
     gameId,
     setGameId,
@@ -57,10 +58,16 @@ export default function useGameActions() {
     return rollDice(id);
   }
 
-  // Called by <Dice /> once the rolling animation ends.
+     // Called by <Dice /> once the rolling animation ends.
   function handleFinalDiceValue({ roll, game }) {
     setDiceValue(roll);
     applyServerState(game);
+
+    setLiveAnnouncement(
+      roll === 1
+        ? "You rolled a 1. Your turn is over and your turn points are lost."
+        : `You rolled a ${roll}.`
+    );
 
     if (roll === 1) loseAudio?.play();
 
