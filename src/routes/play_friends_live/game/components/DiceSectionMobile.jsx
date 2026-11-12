@@ -14,6 +14,7 @@ function DiceSectionMobile() {
     <div className=" border-r-[#ffffff40] border-r md:hidden flex flex-col items-center justify-around px-2 bg-[#00000010] h-[60vh] ">
          <a
           href={"#" + (currentPlayer % playerData.length)}
+          data-keyboard-action="pass"
           className="bg-[#056FA480] w-[200px] md:w-full  text-white text-center text-base lg:text-xl xl:text-2xl font-semibold py-2 lg:py-4 rounded border hover:scale-105 active:scale-100 duration-300"
           onClick={() => handlePass(isRolling)}
         >

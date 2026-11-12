@@ -59,6 +59,7 @@ export function Dice({
     <>
 <button
   type="button"
+  data-keyboard-action="roll"
   className={`hover:scale-105 active:scale-100 duration-300 md:w-auto w-[200px]`}
   onClick={handleDiceClick}
   disabled={isRolling}

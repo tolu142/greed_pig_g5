@@ -21,6 +21,67 @@ export default function LiveGame() {
   useEffect(() => {
     setIsContinue(true)
   }, [])
+
+  useEffect(() => {
+    const handleKeyDown = (event) => {
+      if (
+        isGameOver ||
+        event.repeat ||
+        event.ctrlKey ||
+        event.altKey ||
+        event.metaKey
+      ) {
+        return;
+      }
+
+      const target = event.target;
+
+      // Don't interfere with typing or normal keyboard navigation.
+      if (
+        target?.isContentEditable ||
+        target?.closest?.(
+          "input, textarea, select, button, a, [role='button'], [contenteditable='true']"
+        )
+      ) {
+        return;
+      }
+
+      if (event.code === "Space") {
+        const rollButton = Array.from(
+          document.querySelectorAll('[data-keyboard-action="roll"]')
+        ).find(
+          (button) =>
+            button.getClientRects().length > 0 && !button.disabled
+        );
+
+        if (rollButton) {
+          event.preventDefault();
+          rollButton.click();
+        }
+      }
+
+      if (event.key.toLowerCase() === "p") {
+        const passButton = Array.from(
+          document.querySelectorAll('[data-keyboard-action="pass"]')
+        ).find(
+          (button) =>
+            button.getClientRects().length > 0 && !button.disabled
+        );
+
+        if (passButton) {
+          event.preventDefault();
+          passButton.click();
+        }
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isGameOver]);
+
   
   return (
     <div className="md:grid md:grid-cols-[minmax(auto,_200px)_1fr_minmax(auto,_200px)] lg:grid-cols-[minmax(auto,_250px)_1fr_minmax(auto,_250px)] xl:grid-cols-[auto_1fr_minmax(auto,_300px)] relative">
