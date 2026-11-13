@@ -1,138 +1,18 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState } from "react";
 import logo from "src/assets/pig-0.png";
 import { AiFillHome } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import BackButton from "src/components/BackButton";
+import TutorialDialog from "src/components/TutorialDialog";
 
 export default function HowToPlay() {
   const [tutorialStarted, setTutorialStarted] = useState(false);
-  const [tutorialStep, setTutorialStep] = useState(0);
-  const tutorialDialogRef = useRef(null);
-  const startTutorialButtonRef = useRef(null);
-  const tutorialHasOpened = useRef(false);
-  useEffect(() => {
-    if (tutorialStarted) {
-      tutorialHasOpened.current = true;
-      tutorialDialogRef.current?.focus();
-    } else if (tutorialHasOpened.current) {
-      startTutorialButtonRef.current?.focus();
-      tutorialHasOpened.current = false;
-    }
- }, [tutorialStarted]);
-  const tutorialSteps = [
-  {
-    title: "Welcome to Greedy Pig!",
-    description:
-      "Greedy Pig is a dice game where players take turns rolling a die to collect points. Be careful: rolling a 1 makes you lose all the points accumulated during that turn!",
-  },
-  {
-    title: "Set up your game",
-    description:
-      "Choose your target score, enter the number of players, and provide their names. When everyone is ready, click Play.",
-  },
-  {
-    title: "Roll the dice",
-    description:
-      "During your turn, click the ROLL button or press the Space key to roll the die. Any result other than 1 adds points to your running turn total.",
-  },
-  {
-    title: "Watch out for 1!",
-    description:
-      "If you roll a 1, you lose all the points accumulated during that turn, and your turn ends automatically.",
-  },
-  {
-    title: "Know when to pass",
-    description:
-      "You can choose to pass before rolling a 1. Click PASS or press P to add your running turn points to your total score and end your turn.",
-  },
-  {
-    title: "Win the game!",
-    description:
-      "The first player to reach or exceed the target score wins the game. Good luck!",
-  },
-];
 
   return (
     <div className="p-[5%] flex flex-col relative w-full items-center ">
       {tutorialStarted && (
-  <div
-    className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-6"
-    role="dialog"
-    aria-modal="true"
-    aria-labelledby="tutorial-title"
-    aria-describedby="tutorial-description"
-  >
-    <div
-      ref={tutorialDialogRef}
-      tabIndex={-1}
-      className="bg-[#252525] border border-white rounded-xl p-6 md:p-10 max-w-xl w-full text-white text-center space-y-6"
-    >
-      <p className="text-sm text-gray-300">
-        Step {tutorialStep + 1} of {tutorialSteps.length}
-      </p>
-
-      <div className="sr-only" aria-live="polite" aria-atomic="true">
-        Step {tutorialStep + 1} of {tutorialSteps.length}:{" "}
-        {tutorialSteps[tutorialStep].title}
-      </div>
-
-      <h2 id="tutorial-title" className="pri-font text-2xl md:text-3xl">
-        {tutorialSteps[tutorialStep].title}
-      </h2>
-
-     <p
-       id="tutorial-description"
-       className="text-base md:text-lg"
-     >
-       {tutorialSteps[tutorialStep].description}
-     </p>
-
-      <div className="flex justify-between gap-3 flex-wrap">
-        <button
-          type="button"
-          onClick={() => setTutorialStarted(false)}
-          className="px-4 py-2 border border-white rounded-lg hover:bg-white/10"
-          aria-label="Skip tutorial and close"
-        >
-          Skip tutorial
-        </button>
-
-        <div className="flex gap-3">
-          {tutorialStep > 0 && (
-            <button
-              type="button"
-              onClick={() => setTutorialStep((step) => step - 1)}
-              className="px-4 py-2 border border-white rounded-lg hover:bg-white/10"
-            >
-              Back
-            </button>
-          )}
-
-          {tutorialStep < tutorialSteps.length - 1 ? (
-            <button
-              type="button"
-              onClick={() => setTutorialStep((step) => step + 1)}
-              className="px-4 py-2 bg-[#D30CBD] rounded-lg hover:bg-[#ad0a9b]"
-            >
-              Next
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => {
-                setTutorialStarted(false);
-                setTutorialStep(0);
-              }}
-              className="px-4 py-2 bg-[#D30CBD] rounded-lg hover:bg-[#ad0a9b]"
-            >
-              Finish
-            </button>
-          )}
-        </div>
-      </div>
-    </div>
-  </div>
-)}
+        <TutorialDialog onClose={() => setTutorialStarted(false)} />
+      )}
       <nav className="fixed top-0 w-full flex justify-between p-[5%]">
         <BackButton />
         <Link
@@ -148,17 +28,13 @@ export default function HowToPlay() {
           <img src={logo} alt="logo" width={400} />
         </figure>
         <button
-  type="button"
-  ref={startTutorialButtonRef}
-  onClick={() => {
-    setTutorialStep(0);
-    setTutorialStarted(true);
-  }}
-  className="bg-[#D30CBD] hover:bg-[#ad0a9b] text-white font-bold px-8 py-3 rounded-lg duration-300"
-  aria-label="Start the interactive Greedy Pig tutorial"
->
-  Start Interactive Tutorial
-</button>
+          type="button"
+          onClick={() => setTutorialStarted(true)}
+          className="bg-[#D30CBD] hover:bg-[#ad0a9b] text-white font-bold px-8 py-3 rounded-lg duration-300"
+          aria-label="Start the interactive Greedy Pig tutorial"
+        >
+          Start Interactive Tutorial
+        </button>
         <section className="text-white space-y-4">
           <h1 className="pri-font text-2xl lg:text-4xl">GAME SETUP</h1>
           <section className=" backdrop:blur bg-[#ffffff10] px-8 lg:px-12 py-6 border text-base lg:text-xl rounded-lg">
@@ -203,6 +79,14 @@ export default function HowToPlay() {
           </h4>
           <p >
           The first player to score <b>100</b> or more points wins
+          </p>
+          </section>
+          <section className=" backdrop:blur bg-[#ffffff10] px-8 lg:px-12 py-6 border text-base lg:text-xl rounded-lg flex flex-col items-center text-center">
+          <h4 className=" text-lg lg:text-2xl font-bold">
+            5.
+          </h4>
+          <p >
+          Roll <b>8</b> times in a row without a 1 to unlock <b>STEAL</b>: take all of another player's banked points and add them to your turn. A 1 still loses them.
           </p>
           </section>
         </section>
