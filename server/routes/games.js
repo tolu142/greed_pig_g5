@@ -68,13 +68,21 @@ router.post(
 
     if (player) {
       // Logged-in player: create game and account link together.
-      const result = await callInternalConvex(
-        "/internal/create-linked-game",
-        {
+      const playerIndex = req.body.playerIndex ?? 0;
+
+        if (
+          !Number.isInteger(playerIndex) ||
+          playerIndex < 0 ||
+          playerIndex >= state.players.length
+        ) {
+          throw new GameError("Invalid player selection.", 400);
+        }
+
+        const result = await callInternalConvex("/internal/create-linked-game", {
           playerId: player.playerId,
           state,
-        }
-      );
+          playerIndex,
+        });
 
       id = result.gameId;
     } else {

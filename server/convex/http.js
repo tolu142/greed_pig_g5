@@ -230,7 +230,7 @@ http.route({
 
  // Retrieve a player's XP, level, stats and achievements
 http.route({
-  path: "/internal/player-profile",
+  path: "/internal/player-profile-by-id",
   method: "POST",
   handler: httpAction(async (ctx, request) => {
     if (!verifyInternalRequest(request)) {
@@ -299,6 +299,7 @@ http.route({
         {
           playerId: body.playerId,
           state: body.state,
+          playerIndex: body.playerIndex,
         }
       );
 
@@ -404,6 +405,54 @@ http.route({
       }
 
       return new Response("Game move failed", { status: 400 });
+    }
+  }),
+});
+
+
+ // Retrieve progression details for a validated player session
+http.route({
+  path: "/internal/player-profile",
+  method: "POST",
+  handler: httpAction(async (ctx, request) => {
+    if (!verifyInternalRequest(request)) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    try {
+      const { tokenHash } = await request.json();
+
+      if (
+        typeof tokenHash !== "string" ||
+        !/^[a-f0-9]{64}$/.test(tokenHash)
+      ) {
+        return new Response("Invalid request", { status: 400 });
+      }
+
+      const sessionPlayer = await ctx.runQuery(
+        internal.sessions.findValid,
+        { tokenHash }
+      );
+
+      if (!sessionPlayer) {
+        return new Response("Session expired or invalid", {
+          status: 401,
+        });
+      }
+
+      const profile = await ctx.runQuery(
+        internal.progression.getProfile,
+        { playerId: sessionPlayer.playerId }
+      );
+
+      if (!profile) {
+        return new Response("Player not found", { status: 404 });
+      }
+
+      return Response.json({ profile });
+    } catch (error) {
+      console.error("Profile lookup failed:", error);
+      return new Response("Profile lookup failed", { status: 500 });
     }
   }),
 });

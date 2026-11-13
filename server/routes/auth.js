@@ -197,4 +197,36 @@ router.get("/me", async (req, res, next) => {
 });
 
 
+router.get("/profile", async (req, res, next) => {
+  try {
+    const token = getSessionToken(req);
+
+    if (!token) {
+      return res.status(401).json({
+        error: "Not authenticated.",
+      });
+    }
+
+    const result = await callInternalConvex(
+      "/internal/player-profile",
+      {
+        tokenHash: hashSessionToken(token),
+      }
+    );
+
+    if (!result.profile) {
+      return res.status(404).json({
+        error: "Player profile not found.",
+      });
+    }
+
+    return res.json({
+      profile: result.profile,
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+
+
 export default router;
