@@ -6,9 +6,31 @@ const COMPLETION_XP = 50;
 const WIN_BONUS_XP = 100;
 const XP_PER_LEVEL = 200;
 
+// Used for games saved before the steal power-up existed (new games carry their own stealAt).
+const DEFAULT_STEAL_STREAK = 8;
+
+
+// Sorts object keys so two states with the same data compare equal
+// no matter what order their fields were written in.
+function canonical(value) {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (value && typeof value === "object") {
+    return Object.fromEntries(
+      Object.keys(value)
+        .sort()
+        .map((key) => [key, canonical(value[key])])
+    );
+  }
+  return value;
+}
+
+function sameState(a, b) {
+  return JSON.stringify(canonical(a)) === JSON.stringify(canonical(b));
+}
+
 
 function assertUnchangedGameState(previous, current) {
-  if (JSON.stringify(previous) !== JSON.stringify(current)) {
+  if (!sameState(previous, current)) {
     throw new Error(
       "Game state changed. Please retry your move."
     );
@@ -132,6 +154,16 @@ export const awardGame = internalMutation({
 });
 
 
+// Is there anyone other than the current player with banked points to steal?
+function hasStealTargets(state) {
+  return state.players.some(
+    (p, i) => i !== state.currentPlayer && p.total_points > 0
+  );
+}
+
+
+// Works out what the game state SHOULD be after a move, then checks it matches
+// the state the server sent. These rules must stay in step with server/logic/game.js.
 function validateMove(previous, next, action, roll) {
   if (!previous || previous.isGameOver) {
     throw new Error("Game has already finished.");
@@ -151,13 +183,17 @@ function validateMove(previous, next, action, roll) {
     }
 
     expected.lastRoll = roll;
+    expected.lastSteal = null;
 
     if (roll === 1) {
       player.running_points = 0;
+      expected.rollStreak = 0;
+      expected.stealReady = false;
       expected.currentPlayer =
         (playerIndex + 1) % expected.players.length;
     } else {
       player.running_points += roll;
+      expected.rollStreak = (previous.rollStreak ?? 0) + 1;
 
       if (
         player.running_points + player.total_points >=
@@ -165,18 +201,65 @@ function validateMove(previous, next, action, roll) {
       ) {
         expected.isGameOver = true;
         expected.winner = playerIndex;
+        expected.stealReady = false;
+      } else {
+        expected.stealReady =
+          expected.rollStreak >=
+            (expected.stealAt ?? DEFAULT_STEAL_STREAK) &&
+          hasStealTargets(expected);
       }
     }
   } else if (action === "pass") {
     player.total_points += player.running_points;
     player.running_points = 0;
+    expected.rollStreak = 0;
+    expected.stealReady = false;
+    expected.lastSteal = null;
     expected.currentPlayer =
       (playerIndex + 1) % expected.players.length;
+  } else if (action === "steal") {
+    if (!previous.stealReady) {
+      throw new Error("Steal is not available.");
+    }
+
+    // The target is read from the move itself, then checked below.
+    const targetIndex = next?.lastSteal?.from;
+
+    if (
+      !Number.isInteger(targetIndex) ||
+      targetIndex < 0 ||
+      targetIndex >= expected.players.length ||
+      targetIndex === playerIndex
+    ) {
+      throw new Error("Invalid steal target.");
+    }
+
+    const victim = expected.players[targetIndex];
+
+    if (victim.total_points <= 0) {
+      throw new Error("Steal target has no points.");
+    }
+
+    const amount = victim.total_points;
+    victim.total_points = 0;
+    player.running_points += amount;
+
+    expected.lastSteal = { from: targetIndex, to: playerIndex, amount };
+    expected.rollStreak = 0;
+    expected.stealReady = false;
+
+    if (
+      player.running_points + player.total_points >=
+      expected.maxPoints
+    ) {
+      expected.isGameOver = true;
+      expected.winner = playerIndex;
+    }
   } else {
     throw new Error("Invalid game action.");
   }
 
-  if (JSON.stringify(expected) !== JSON.stringify(next)) {
+  if (!sameState(expected, next)) {
     throw new Error("Move does not match the game rules.");
   }
 }
@@ -188,7 +271,11 @@ export const saveMoveAndAward = internalMutation({
     gameId: v.id("games"),
     previousState: v.any(),
     nextState: v.any(),
-    action: v.union(v.literal("roll"), v.literal("pass")),
+    action: v.union(
+      v.literal("roll"),
+      v.literal("pass"),
+      v.literal("steal")
+    ),
     roll: v.optional(v.number()),
   },
 

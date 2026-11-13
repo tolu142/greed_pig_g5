@@ -6,6 +6,7 @@ import {
   rollDie,
   applyRoll,
   applyPass,
+  applySteal,
 } from "../logic/game.js";
 import { createGameRecord, loadGame, saveGame } from "../db.js";
 import { hashSessionToken } from "../auth/sessions.js";
@@ -159,5 +160,26 @@ router.post(
   })
 );
 
+// Steal: take all banked points of another player after a streak of good rolls.
+router.post(
+  "/:id/steal",
+  handle(async (req, res) => {
+    const state = await getOr404(req.params.id);
+    const next = applySteal(state, req.body?.targetIndex);
+
+    if (process.env.CONVEX_URL) {
+      await callInternalConvex("/internal/save-move", {
+        gameId: req.params.id,
+        previousState: state,
+        nextState: next,
+        action: "steal",
+      });
+    } else {
+      await saveGame(req.params.id, next);
+    }
+
+    res.json({ game: toPublic(req.params.id, next) });
+  })
+);
 
 export default router;

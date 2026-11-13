@@ -11,6 +11,7 @@ import { getInitialPlayerData } from "src/utils/live_game/getInitialData";
 import SoundSwitch from "src/components/SoundSwitch";
 import { useGreedyPigContext } from "src/context/useGreedyPigContext";
 import ErrorBanner from "src/components/ErrorBanner";
+import { INITIAL_STEAL } from "src/utils/steal";
 import {
   createGame,
   getGame,
@@ -30,6 +31,7 @@ function LiveGameSetup() {
     gameId,
     setGameId,
     setApiError,
+    setSteal,
   } = useLiveGameContext();
 
   const navigate = useNavigate();
@@ -61,8 +63,6 @@ function LiveGameSetup() {
       }
 
       if (!canResume) {
-        // This will be extended to send selectedPlayerIndex
-        // once the backend accepts player selection.
         const game = await createGame(
           playerData,
           maxPoints,
@@ -70,6 +70,7 @@ function LiveGameSetup() {
         );
 
         setGameId(game.id);
+        setSteal({ ...INITIAL_STEAL, at: game.stealAt ?? INITIAL_STEAL.at });
 
         const newPlayerData = playerData.map((player) => ({
           ...player,

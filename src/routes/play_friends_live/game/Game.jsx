@@ -9,6 +9,7 @@ import StatsSectionMobile from "./components/StatsSectionMobile";
 import CurrentPlayerMobile from "./components/CurrentPlayerMobile";
 import DiceSectionMobile from "./components/DiceSectionMobile";
 import ErrorBanner from "src/components/ErrorBanner";
+import StealModal from "src/components/StealModal";
 
 export default function LiveGame() {
   const { playerData, currentPlayer, isGameOver, setIsContinue } = useLiveGameContext();
@@ -20,6 +21,7 @@ export default function LiveGame() {
   return (
     <div className="md:grid md:grid-cols-[minmax(auto,_200px)_1fr_minmax(auto,_200px)] lg:grid-cols-[minmax(auto,_250px)_1fr_minmax(auto,_250px)] xl:grid-cols-[auto_1fr_minmax(auto,_300px)] relative">
       <ErrorBanner />
+      <StealModal />
       <DiceSection />
       <div className=" space-y-2 p-2">
         <Navbar />

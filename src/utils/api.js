@@ -60,6 +60,9 @@ export const registerPlayer = (username, password) =>
     body: JSON.stringify({ username, password }),
   });
 
+
+export const stealPoints = (id, targetIndex) =>
+  request(`/games/${id}/steal`, { method: "POST", body: JSON.stringify({ targetIndex }) });
 export const loginPlayer = async (username, password) => {
   const result = await request("/auth/login", {
     method: "POST",
