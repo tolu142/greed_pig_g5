@@ -8,7 +8,12 @@
  * @module
  */
 
+import type * as gameParticipants from "../gameParticipants.js";
 import type * as games from "../games.js";
+import type * as http from "../http.js";
+import type * as players from "../players.js";
+import type * as progression from "../progression.js";
+import type * as sessions from "../sessions.js";
 
 import type {
   ApiFromModules,
@@ -17,7 +22,12 @@ import type {
 } from "convex/server";
 
 declare const fullApi: ApiFromModules<{
+  gameParticipants: typeof gameParticipants;
   games: typeof games;
+  http: typeof http;
+  players: typeof players;
+  progression: typeof progression;
+  sessions: typeof sessions;
 }>;
 
 /**
