@@ -372,7 +372,7 @@ http.route({
       !body.nextState ||
       typeof body.nextState !== "object" ||
       Array.isArray(body.nextState) ||
-      !["roll", "pass"].includes(body.action) ||
+      !["roll", "pass", "steal"].includes(body.action) ||
       (body.action === "roll" &&
         (!Number.isInteger(body.roll) ||
           body.roll < 1 ||
