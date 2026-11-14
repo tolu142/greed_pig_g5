@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLiveGameContext } from "src/context/useLiveGameContext";
 import useGameActions from "src/hooks/useGameActions";
 
@@ -8,6 +8,7 @@ const nameOf = (player) => player.name || player.tag;
 export default function StealModal() {
   const { steal, setSteal, playerData, currentPlayer } = useLiveGameContext();
   const { handleSteal } = useGameActions();
+  const dialogRef = useRef(null);
 
   // After the unlock animation plays for a moment, move on to choosing a player.
   useEffect(() => {
@@ -15,6 +16,24 @@ export default function StealModal() {
     const timer = setTimeout(() => setSteal((prev) => ({ ...prev, intro: false })), 1800);
     return () => clearTimeout(timer);
   }, [steal.open, steal.intro]);
+
+  // Move focus into the pop-up when it opens, and give it back when it closes.
+  useEffect(() => {
+    if (!steal.open) return;
+    const opener = document.activeElement;
+    dialogRef.current?.focus();
+    return () => {
+      if (opener && typeof opener.focus === "function" && document.contains(opener)) {
+        opener.focus();
+      }
+    };
+  }, [steal.open]);
+
+  // Once the player list is showing, focus the first player you can steal from.
+  useEffect(() => {
+    if (!steal.open || steal.intro || steal.done) return;
+    dialogRef.current?.querySelector("button:not([disabled])")?.focus();
+  }, [steal.open, steal.intro, steal.done]);
 
   if (!steal.open) return null;
 
@@ -24,14 +43,51 @@ export default function StealModal() {
 
   const close = () => setSteal((prev) => ({ ...prev, open: false }));
 
+  function handleKeyDown(event) {
+    // Keys pressed in this pop-up must not reach the game's Space / P shortcuts.
+    event.stopPropagation();
+
+    if (event.key === "Escape") {
+      close();
+      return;
+    }
+
+    // Keep Tab inside the pop-up.
+    if (event.key === "Tab") {
+      const buttons = Array.from(
+        dialogRef.current.querySelectorAll("button:not([disabled])")
+      );
+      if (buttons.length === 0) {
+        event.preventDefault();
+        return;
+      }
+      const first = buttons[0];
+      const last = buttons[buttons.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || active === dialogRef.current)) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+  }
+
   return (
     <div
       role="dialog"
       aria-modal="true"
       aria-labelledby="steal-title"
       className="fixed inset-0 z-40 flex items-center justify-center bg-[#000000c0] p-4 text-white"
+      onKeyDown={handleKeyDown}
     >
-      <section className="w-full max-w-md space-y-4 rounded-2xl border border-[#ffffff40] bg-[#111111] p-6 text-center">
+      <section
+        ref={dialogRef}
+        tabIndex={-1}
+        className="w-full max-w-md space-y-4 rounded-2xl border border-[#ffffff40] bg-[#111111] p-6 text-center focus:outline-none"
+      >
         {steal.done ? (
           <div aria-live="polite" className="space-y-2">
             <p className="animate-bounce text-6xl">🐷💰</p>

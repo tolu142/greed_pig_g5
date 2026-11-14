@@ -1,13 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import logo from "src/assets/pig-0.png";
 import { AiFillHome } from "react-icons/ai";
 import { Link } from "react-router-dom";
 import BackButton from "src/components/BackButton";
+import TutorialDialog from "src/components/TutorialDialog";
 
 export default function HowToPlay() {
+  const [tutorialStarted, setTutorialStarted] = useState(false);
 
   return (
     <div className="p-[5%] flex flex-col relative w-full items-center ">
+      {tutorialStarted && (
+        <TutorialDialog onClose={() => setTutorialStarted(false)} />
+      )}
       <nav className="fixed top-0 w-full flex justify-between p-[5%]">
         <BackButton />
         <Link
@@ -22,6 +27,14 @@ export default function HowToPlay() {
         <figure className="">
           <img src={logo} alt="logo" width={400} />
         </figure>
+        <button
+          type="button"
+          onClick={() => setTutorialStarted(true)}
+          className="bg-[#D30CBD] hover:bg-[#ad0a9b] text-white font-bold px-8 py-3 rounded-lg duration-300"
+          aria-label="Start the interactive Greedy Pig tutorial"
+        >
+          Start Interactive Tutorial
+        </button>
         <section className="text-white space-y-4">
           <h1 className="pri-font text-2xl lg:text-4xl">GAME SETUP</h1>
           <section className=" backdrop:blur bg-[#ffffff10] px-8 lg:px-12 py-6 border text-base lg:text-xl rounded-lg">
@@ -66,6 +79,14 @@ export default function HowToPlay() {
           </h4>
           <p >
           The first player to score <b>100</b> or more points wins
+          </p>
+          </section>
+          <section className=" backdrop:blur bg-[#ffffff10] px-8 lg:px-12 py-6 border text-base lg:text-xl rounded-lg flex flex-col items-center text-center">
+          <h4 className=" text-lg lg:text-2xl font-bold">
+            5.
+          </h4>
+          <p >
+          Roll <b>8</b> times in a row without a 1 to unlock <b>STEAL</b>: take all of another player's banked points and add them to your turn. A 1 still loses them.
           </p>
           </section>
         </section>
