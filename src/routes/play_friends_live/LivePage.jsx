@@ -4,6 +4,7 @@ import { useGreedyPigContext } from "src/context/useGreedyPigContext";
 import { LiveGameContext } from "src/context/useLiveGameContext";
 import { getInitialPlayerData } from "src/utils/live_game/getInitialData";
 import { wakeServer } from "src/utils/api";
+import { INITIAL_STEAL } from "src/utils/steal";
 
 function LiveGamePage() {
   const { preloadSrcList,pigPetNames } = useGreedyPigContext();
@@ -20,6 +21,8 @@ function LiveGamePage() {
   const [gameId, setGameId] = useState(null); // id of the game saved on the server
   const [apiError, setApiError] = useState(""); // message shown when the server call fails
   const [liveAnnouncement, setLiveAnnouncement] = useState("");
+  const [steal, setSteal] = useState(INITIAL_STEAL); // steal power-up status
+
   useEffect(() => {
     wakeServer();
   }, []);
@@ -63,6 +66,8 @@ function LiveGamePage() {
             setApiError,
             liveAnnouncement,
             setLiveAnnouncement,
+            steal,
+            setSteal,
           }}
         >
           <Outlet />

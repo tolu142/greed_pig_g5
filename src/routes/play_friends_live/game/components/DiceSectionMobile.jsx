@@ -3,6 +3,7 @@ import { useLiveGameContext } from 'src/context/useLiveGameContext';
 import Menu from "./Menu";
 import { Dice } from "src/components/Dice";
 import useGameActions from "src/hooks/useGameActions";
+import StealControls from "src/components/StealControls";
 
 
 function DiceSectionMobile() {
@@ -29,8 +30,11 @@ function DiceSectionMobile() {
           isRolling={isRolling}
           setChangeBackground={setChangeBackground}
         />
-      
-      
+
+        <div className="w-[200px]">
+          <StealControls disabled={isRolling} />
+        </div>
+
         <Menu />
         <div className="text-white flex justify-between w-full">
           <p className="text-center text-sm lg:text-lg">{playerData.length} players</p>

@@ -3,6 +3,7 @@ import { useLiveGameContext } from "src/context/useLiveGameContext";
 import Menu from "./Menu";
 import { Dice } from "src/components/Dice";
 import useGameActions from "src/hooks/useGameActions";
+import StealControls from "src/components/StealControls";
 
 function DiceSection() {
   const { playerData, setChangeBackground, currentPlayer, maxPoints } = useLiveGameContext();
@@ -27,6 +28,7 @@ function DiceSection() {
       >
         PASS
       </a>
+      <StealControls disabled={isRolling} />
       <div className="text-white grid place-content-center gap-2 bg-[#ffffff10] w-full p-4 rounded-lg border border-[#ffffff40]">
         <p className="text-center text-sm lg:text-lg">
           {playerData.length} players
