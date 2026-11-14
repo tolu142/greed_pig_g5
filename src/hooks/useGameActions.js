@@ -1,6 +1,6 @@
 import { useRef } from "react";
 import { useLiveGameContext } from "src/context/useLiveGameContext";
-import { createGame, rollDice, passTurn, stealPoints } from "src/utils/api";
+import { createGame, rollDice, passTurn, stealPoints, getGame } from "src/utils/api";
 import useAudio from "src/hooks/useAudio";
 import addPlayerSound from "src/sound_effect/add_player.mp3";
 import loseSound from "src/sound_effect/lose_sound.mp3";
@@ -72,8 +72,18 @@ export default function useGameActions() {
     return game.id;
   }
 
+  async function resyncFromServer() {
+    if (!gameId) return;
+    try {
+      applyServerState(await getGame(gameId));
+    } catch {
+      // still offline: leave the screen as it is
+    }
+  }
+
   function reportError(message) {
     setApiError(message);
+    resyncFromServer();
   }
 
   // Called by <Dice /> when the player clicks. The server decides the number.
@@ -109,6 +119,7 @@ export default function useGameActions() {
       applyServerState(game);
     } catch (e) {
       setApiError(e.message);
+      resyncFromServer();
     } finally {
       isPassing.current = false;
     }
@@ -137,6 +148,7 @@ export default function useGameActions() {
       finishIfOver(game, 2600);
     } catch (e) {
       setApiError(e.message);
+      resyncFromServer();
     } finally {
       isStealing.current = false;
     }
